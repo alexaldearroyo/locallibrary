@@ -1,22 +1,135 @@
-// views/index.pug:
+// controllers/authorController.js:
+
+// En /controllers/authorController.js
+const asyncHandler = require('express-async-handler'); 
+const Author = require('../models/author');
+const Book = require("../models/book");
+
+
+// Display list of all Authors.
+exports.author_list = asyncHandler(async (req, res, next) => {
+    const allAuthors = await Author.find().sort({ family_name: 1 }).exec();
+    res.render("author_list", {
+      title: "Author List",
+      author_list: allAuthors,
+    });
+  });
+  
+
+// Display detail page for a specific Author.
+exports.author_detail = asyncHandler(async (req, res, next) => {
+  // Get details of author and all their books (in parallel)
+  const [author, allBooksByAuthor] = await Promise.all([
+    Author.findById(req.params.id).exec(),
+    Book.find({ author: req.params.id }, "title summary").exec(),
+  ]);
+
+  if (author === null) {
+    // No results.
+    const err = new Error("Author not found");
+    err.status = 404;
+    return next(err);
+  }
+
+  res.render("author_detail", {
+    title: "Author Detail",
+    author: author,
+    author_books: allBooksByAuthor,
+  });
+});
+
+
+// Display author create form on GET.
+exports.author_create_get = (req, res) => {
+    res.send('NOT IMPLEMENTED: Author create GET');
+};
+
+// Handle author create on POST.
+exports.author_create_post = (req, res) => {
+    res.send('NOT IMPLEMENTED: Author create POST');
+};
+
+// Display Author delete form on GET.
+exports.author_delete_get = (req, res) => {
+    res.send('NOT IMPLEMENTED: Author delete GET');
+};
+
+// Handle Author delete on POST.
+exports.author_delete_post = (req, res) => {
+    res.send('NOT IMPLEMENTED: Author delete POST');
+};
+
+// Display Author update form on GET.
+exports.author_update_get = (req, res) => {
+    res.send('NOT IMPLEMENTED: Author update GET');
+};
+
+// Handle Author update on POST.
+exports.author_update_post = (req, res) => {
+    res.send('NOT IMPLEMENTED: Author update POST');
+};
+
+----------------------------------------
+
+// models/author.js:
+
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+const { DateTime } = require('luxon');
+
+const AuthorSchema = new Schema({
+    first_name: { type: String, required: true, maxLength: 100 },
+    family_name: { type: String, required: true, maxLength: 100 },
+    date_of_birth: { type: Date },
+    date_of_death: { type: Date },
+});
+
+AuthorSchema
+.virtual('name')
+.get(function () {
+    return this.family_name + ', ' + this.first_name;
+});
+
+AuthorSchema.virtual("lifespan").get(function () {
+  const formatDate = (date) => {
+      return date ? DateTime.fromJSDate(date).setLocale('en').toLocaleString(DateTime.DATE_SHORT) : '';
+  };
+
+  let birth = formatDate(this.date_of_birth);
+  let death = formatDate(this.date_of_death);
+  return (birth || death) ? `${birth} - ${death}` : 'Unknown';
+});
+
+
+AuthorSchema.virtual('url')
+.get(function () {
+    return '/catalog/author/' + this._id;
+});
+
+module.exports = mongoose.model('Author', AuthorSchema);
+
+----------------------------------------
+
+// views/author_detail.pug:
 
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
 
-----------------------------------------
+  h1 Author: #{author.name}
+  p #{author.date_of_birth} - #{author.date_of_death}
 
-// views/layout.pug:
+  div(style='margin-left:20px;margin-top:20px')
 
-doctype html
-html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    block content
+    h4 Books
+    if author_books.length
+      dl
+        each book in author_books
+          dt
+            a(href=book.url) #{book.title}
+          dd #{book.summary}
+    else
+      p This author has no books.
 
 ----------------------------------------
 
