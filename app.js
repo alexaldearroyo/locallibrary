@@ -1,4 +1,3 @@
-
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -17,7 +16,13 @@ var app = express();
 
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
-const mongoDB = 'mongodb+srv://myAtlasDBUser:ecu123@atlascluster.mf2mnk1.mongodb.net/?retryWrites=true&w=majority';
+
+// Importa el paquete dotenv y configura las variables de entorno desde .env
+require('dotenv').config();
+
+// Accede a la variable de entorno MONGODB_URI
+const mongoDB = process.env.MONGODB_URI;
+
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
 const db = mongoose.connection;
