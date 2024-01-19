@@ -4,10 +4,6 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-const compression = require('compression');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var catalogRouter = require('./routes/catalog');
@@ -16,20 +12,8 @@ var app = express();
 
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
-
-// Importa el paquete dotenv y configura las variables de entorno desde .env
-require('dotenv').config();
-
-// Set up mongoose connection
-const dev_db_url =
-  "mongodb+srv://myAtlasDBUser:ecu123@atlascluster.mf2mnk1.mongodb.net/?retryWrites=true&w=majority";
-const mongoDB = process.env.MONGODB_URI || dev_db_url;
-
-mongoose.connect(mongoDB, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
+const mongoDB = 'mongodb+srv://myAtlasDBUser:ecu123@atlascluster.mf2mnk1.mongodb.net/?retryWrites=true&w=majority';
+mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -43,15 +27,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(helmet());
-app.use(compression());
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100 // limita cada IP a 100 solicitudes por ventana
-});
-
-app.use(limiter);
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
