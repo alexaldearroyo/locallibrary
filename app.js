@@ -20,8 +20,10 @@ mongoose.set('strictQuery', false);
 // Importa el paquete dotenv y configura las variables de entorno desde .env
 require('dotenv').config();
 
-// Accede a la variable de entorno MONGODB_URI
-const mongoDB = process.env.MONGODB_URI;
+// Set up mongoose connection
+const dev_db_url =
+  "mongodb+srv://myAtlasDBUser:ecu123@atlascluster.mf2mnk1.mongodb.net/?retryWrites=true&w=majority";
+const mongoDB = process.env.MONGODB_URI || dev_db_url;
 
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
