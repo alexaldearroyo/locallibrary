@@ -12,8 +12,11 @@ var app = express();
 
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
-const mongoDB = 'mongodb+srv://myAtlasDBUser:ecu123@atlascluster.mf2mnk1.mongodb.net/?retryWrites=true&w=majority';
+
+require('dotenv').config();
+const mongoDB = process.env.MONGODB_URI;
 mongoose.connect(mongoDB);
+
 mongoose.Promise = global.Promise;
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
