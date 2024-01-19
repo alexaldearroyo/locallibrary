@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1= title
+  if book_instances.length > 0
+    p #[strong Book instances associated with this book must be deleted before deleting the book.]
+    ul
+      each book_instance in book_instances
+        li= book_instance.imprint
+  else
+    p Do you really want to delete this Book?
+    form(method='POST' action='')
+      input(type='hidden' name='bookid' value=book._id)
+      button.btn.btn-primary(type='submit') Delete

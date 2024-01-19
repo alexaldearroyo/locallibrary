@@ -1,135 +1,88 @@
-// controllers/authorController.js:
-
-// En /controllers/authorController.js
-const asyncHandler = require('express-async-handler'); 
-const Author = require('../models/author');
-const Book = require("../models/book");
-
-
-// Display list of all Authors.
-exports.author_list = asyncHandler(async (req, res, next) => {
-    const allAuthors = await Author.find().sort({ family_name: 1 }).exec();
-    res.render("author_list", {
-      title: "Author List",
-      author_list: allAuthors,
-    });
-  });
-  
-
-// Display detail page for a specific Author.
-exports.author_detail = asyncHandler(async (req, res, next) => {
-  // Get details of author and all their books (in parallel)
-  const [author, allBooksByAuthor] = await Promise.all([
-    Author.findById(req.params.id).exec(),
-    Book.find({ author: req.params.id }, "title summary").exec(),
-  ]);
-
-  if (author === null) {
-    // No results.
-    const err = new Error("Author not found");
-    err.status = 404;
-    return next(err);
-  }
-
-  res.render("author_detail", {
-    title: "Author Detail",
-    author: author,
-    author_books: allBooksByAuthor,
-  });
-});
-
-
-// Display author create form on GET.
-exports.author_create_get = (req, res) => {
-    res.send('NOT IMPLEMENTED: Author create GET');
-};
-
-// Handle author create on POST.
-exports.author_create_post = (req, res) => {
-    res.send('NOT IMPLEMENTED: Author create POST');
-};
-
-// Display Author delete form on GET.
-exports.author_delete_get = (req, res) => {
-    res.send('NOT IMPLEMENTED: Author delete GET');
-};
-
-// Handle Author delete on POST.
-exports.author_delete_post = (req, res) => {
-    res.send('NOT IMPLEMENTED: Author delete POST');
-};
-
-// Display Author update form on GET.
-exports.author_update_get = (req, res) => {
-    res.send('NOT IMPLEMENTED: Author update GET');
-};
-
-// Handle Author update on POST.
-exports.author_update_post = (req, res) => {
-    res.send('NOT IMPLEMENTED: Author update POST');
-};
-
-----------------------------------------
-
-// models/author.js:
-
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const { DateTime } = require('luxon');
-
-const AuthorSchema = new Schema({
-    first_name: { type: String, required: true, maxLength: 100 },
-    family_name: { type: String, required: true, maxLength: 100 },
-    date_of_birth: { type: Date },
-    date_of_death: { type: Date },
-});
-
-AuthorSchema
-.virtual('name')
-.get(function () {
-    return this.family_name + ', ' + this.first_name;
-});
-
-AuthorSchema.virtual("lifespan").get(function () {
-  const formatDate = (date) => {
-      return date ? DateTime.fromJSDate(date).setLocale('en').toLocaleString(DateTime.DATE_SHORT) : '';
-  };
-
-  let birth = formatDate(this.date_of_birth);
-  let death = formatDate(this.date_of_death);
-  return (birth || death) ? `${birth} - ${death}` : 'Unknown';
-});
-
-
-AuthorSchema.virtual('url')
-.get(function () {
-    return '/catalog/author/' + this._id;
-});
-
-module.exports = mongoose.model('Author', AuthorSchema);
-
-----------------------------------------
-
-// views/author_detail.pug:
+// views/book_detail.pug:
 
 extends layout
 
 block content
+  h1 Title: #{book.title}
 
-  h1 Author: #{author.name}
-  p #{author.date_of_birth} - #{author.date_of_death}
+  p #[strong Author: ]
+    a(href=book.author.url) #{book.author.name}
+  p #[strong Summary:] #{book.summary}
+  p #[strong ISBN:] #{book.isbn}
+  p #[strong Genre: ]
+    each val, index in book.genre
+      a(href=val.url) #{val.name}
+      if index < book.genre.length - 1
+        |,&nbsp;
 
   div(style='margin-left:20px;margin-top:20px')
+    h4 Copies
 
-    h4 Books
-    if author_books.length
-      dl
-        each book in author_books
-          dt
-            a(href=book.url) #{book.title}
-          dd #{book.summary}
+    each val in book_instances
+      hr
+      if val.status=='Available'
+        p.text-success #{val.status}
+      else if val.status=='Maintenance'
+        p.text-danger #{val.status}
+      else
+        p.text-warning #{val.status}
+      p #[strong Imprint:] #{val.imprint}
+      if val.status!='Available'
+        p #[strong Due back:] #{val.due_back}
+      p #[strong Id: ]
+        a(href=val.url) #{val._id}
+
     else
-      p This author has no books.
+      p There are no copies of this book in the library.
+hr
+p
+  a(href=book.url+'/delete') Delete Book
+p
+  a(href=book.url+'/update') Update Book
+
+----------------------------------------
+
+// views/layout.pug:
+
+doctype html
+html(lang='en')
+  head
+    title= title
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css", integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N", crossorigin="anonymous")
+    script(src="https://code.jquery.com/jquery-3.5.1.slim.min.js", integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj", crossorigin="anonymous")
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js", integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+", crossorigin="anonymous")
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    div(class='container-fluid')
+      div(class='row')
+        div(class='col-sm-2')
+          block sidebar
+            ul(class='sidebar-nav')
+              li
+                a(href='/catalog') Home
+              li
+                a(href='/catalog/books') All books
+              li
+                a(href='/catalog/authors') All authors
+              li
+                a(href='/catalog/genres') All genres
+              li
+                a(href='/catalog/bookinstances') All book-instances
+              li
+                hr
+              li
+                a(href='/catalog/author/create') Create new author
+              li
+                a(href='/catalog/genre/create') Create new genre
+              li
+                a(href='/catalog/book/create') Create new book
+              li
+                a(href='/catalog/bookinstance/create') Create new book instance (copy)
+
+        div(class='col-sm-10')
+          block content
 
 ----------------------------------------
 

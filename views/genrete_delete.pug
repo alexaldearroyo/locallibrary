@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1= title
+  if genre_books.length > 0
+    p #[strong Books associated with this genre must be deleted before deleting the genre.]
+    ul
+      each book in genre_books
+        li= book.title
+  else
+    p Do you really want to delete this Genre?
+    form(method='POST' action='')
+      input(type='hidden' name='genreid' value=genre._id)
+      button.btn.btn-primary(type='submit') Delete
