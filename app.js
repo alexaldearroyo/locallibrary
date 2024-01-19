@@ -28,8 +28,6 @@ const mongoDB = process.env.MONGODB_URI || dev_db_url;
 mongoose.connect(mongoDB, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  reconnectTries: Number.MAX_VALUE,
-  reconnectInterval: 1000
 });
 
 mongoose.Promise = global.Promise;
