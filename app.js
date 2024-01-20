@@ -43,7 +43,7 @@ const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
 
 const dev_db_url =
-  "mongodb+srv://myAtlasDBUser:ecu123@atlascluster.mf2mnk1.mongodb.net/local_library?retryWrites=true&w=majority";
+  "mongodb+srv://myAtlasDBUser:ecuaci123@atlascluster.mf2mnk1.mongodb.net/local_library?retryWrites=true&w=majority";
 const mongoDB = process.env.MONGODB_URI || dev_db_url;
 
 main().catch((err) => console.log(err));
