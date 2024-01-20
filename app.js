@@ -51,7 +51,11 @@ async function main() {
   await mongoose.connect(mongoDB);
 }
 
-mongoose.connect(mongoDB);
+mongoose.connect(mongoDB, {
+  ssl: true,
+  sslValidate: true
+});
+
 
 mongoose.Promise = global.Promise;
 const db = mongoose.connection;
