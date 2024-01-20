@@ -9,9 +9,24 @@ var usersRouter = require('./routes/users');
 var catalogRouter = require('./routes/catalog');
 const compression = require("compression");
 const helmet = require("helmet");
+const debug = require("debug")("author");
 
 
 var app = express();
+
+exports.author_update_get = asyncHandler(async (req, res, next) => {
+  const author = await Author.findById(req.params.id).exec();
+  if (author === null) {
+    // No results.
+    debug(`id not found on update: ${req.params.id}`);
+    const err = new Error("Author not found");
+    err.status = 404;
+    return next(err);
+  }
+
+  res.render("author_form", { title: "Update Author", author: author });
+});
+
 
 // Set up rate limiter: maximum of twenty requests per minute
 const RateLimit = require("express-rate-limit");
