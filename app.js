@@ -10,6 +10,7 @@ var catalogRouter = require('./routes/catalog');
 const compression = require("compression");
 const helmet = require("helmet");
 const debug = require("debug")("author");
+const asyncHandler = require('express-async-handler');
 
 
 var app = express();
